@@ -14,15 +14,15 @@ Weekly flu percent-positive rates for Illinois sourced from the CDC's ILINet / N
 
 ## Models
 
-### Model 1 — Scalar Random Walk
+### Model 1: Scalar Random Walk
 
 A single-state model where the hidden state evolves as $x_k = A \, x_{k-1} + w_k$. The autoregressive coefficient $A \approx 0.98$ is estimated via OLS; process noise $Q$ and observation noise $R$ are optimized by maximizing the Kalman filter log-likelihood with L-BFGS-B.
 
-### Model 2 — Local Linear Trend
+### Model 2: Local Linear Trend
 
 Adds an explicit trend component so the state vector becomes $[\text{level}, \text{trend}]^\top$. MLE drives the trend variance to near zero, confirming that Illinois flu positivity does not exhibit a meaningful long-run drift. The model improves calibration over Model 1 (98.8% empirical coverage vs. 100% on a nominal 95% band).
 
-### Model 3 — Seasonal Structural Model
+### Model 3: Seasonal Structural Model
 
 Extends the local linear trend with six Fourier harmonics (3 sine/cosine pairs at period = 52 weeks), giving an 8-dimensional state vector. Two additional features handle post-COVID regime change:
 

@@ -77,17 +77,17 @@ def run_seasonal_filter(params, measurements, weeks, dates, xk_init=None, Pk_ini
         Pk = np.eye(8) * 10.0
 
     R_k = R_val
-    states, trends, seasonal, upper, lower, innovations = [], [], [], [], [], []
+    states, trends, seasonal, upper, lower, innovations, nll_contribs = [], [], [], [], [], [], []
     xk_list, Pk_list, Pk_pred_list = [], [], []
 
     for k in range(len(measurements)):
         Q_seasonal_k = Q_seasonal_post if dates[k] >= covid_start else Q_seasonal_pre
         A, Q, R = build_seasonal_matrices(Q_level, Q_trend, Q_seasonal_k, R_k)
-        
+
         H_k = np.zeros((1, 8))
         H_k[0, 0] = 1
         H_k[0, 2:] = fourier[k]
-        
+
         xk_pred, Pk_pred = kf_predict(A, xk, Pk, Q)
         xk, Pk, v_k, S_k = kf_update(xk_pred, Pk_pred, measurements[k], H_k, R)
 
@@ -99,13 +99,14 @@ def run_seasonal_filter(params, measurements, weeks, dates, xk_init=None, Pk_ini
         upper.append((H_k @ xk)[0, 0] + 1.5 * sigma)
         lower.append((H_k @ xk)[0, 0] - 1.5 * sigma)
         innovations.append(v_k / np.sqrt(S_k))
-        
+        nll_contribs.append(0.5 * (np.log(S_k) + (v_k ** 2) / S_k).item())
+
         xk_list.append(xk.copy())
         Pk_list.append(Pk.copy())
         Pk_pred_list.append(Pk_pred.copy())
 
         R_k = alpha * (v_k ** 2) + (1.0 - alpha) * R_val
 
-    return (np.array(states), np.array(trends), np.array(seasonal), 
+    return (np.array(states), np.array(trends), np.array(seasonal),
             np.array(upper), np.array(lower), xk, Pk, np.array(innovations),
-            xk_list, Pk_list, Pk_pred_list)
+            xk_list, Pk_list, Pk_pred_list, np.array(nll_contribs))
